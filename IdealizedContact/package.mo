@@ -1890,8 +1890,7 @@ Integration of the two blocks is in progress.")}));
           smooth=Smooth.None));
       annotation (Documentation(info="<!DOCTYPE html><html>
 <p>The surface definition represents a thin and massless layer, which can be connected to any kind of rigid body by a frame connector. The dimensions can be parameterized. In order to be able to use them in the contact block we introduce a new interface to connect the surface definition with the contact block of this library. This adds a scalar vector to the MultiBody frame of the Modelica Standard Library. It comprises maximum three terms to describe the surface geometry and the three direction vectors to resolve them in the connected frame. The latter constitutes the body coordinate system of the contact surface. This model defines a spherical contact surface.</p>
-</html>"),     Diagram(graphics),
-                  Diagram(graphics),
+</html>"),
         Icon(graphics={
             Text(
               extent={{-100,-74},{106,-96}},
@@ -2457,9 +2456,7 @@ Integration of the two blocks is in progress.")}));
           thickness=0.5,
           smooth=Smooth.None));
       annotation (Diagram(coordinateSystem(extent={{-80,-80},{100,0}},
-              preserveAspectRatio=false),
-                          graphics),
-                  Diagram(graphics),
+              preserveAspectRatio=false)),
         Icon(coordinateSystem(extent={{-80,-80},{100,0}},    preserveAspectRatio=true),
              graphics={
             Text(
@@ -8012,8 +8009,7 @@ Integration of the two blocks is in progress.")}));
         end ForceCylinderToCircle;
 
         model MovePointCylinderToCylinderLine
-          import VC =
-             IdealizedContact.Components.VectorCalculations;
+          import VC = IdealizedContact.Components.VectorCalculations;
 
           parameter Modelica.SIunits.Frequency f=100000;
           parameter Real q=1 "1=left   -1=right";
@@ -8727,8 +8723,7 @@ Integration of the two blocks is in progress.")}));
 
         model MovePointCylinderToCylinderPoint
         "Contact point detection between cylinders which are not parallel to each other"
-          import VC =
-             IdealizedContact.Components.VectorCalculations;
+          import VC = IdealizedContact.Components.VectorCalculations;
 
           parameter Modelica.SIunits.Frequency f=100000;
           parameter Real q=1 "1=left   -1=right";
@@ -9625,8 +9620,7 @@ Integration of the two blocks is in progress.")}));
         end ForceCylinderToCylinderPoint;
          annotation(preferredView="info");
       end Components;
-       annotation(preferredView="info",
-                  preferredView="info");
+       annotation(preferredView="info");
     end LinearContact;
 
     package PlanarContact
@@ -12616,8 +12610,7 @@ Modelica.Mechanics.MultiBody.Joints.FreeMotion joint.
    If a PointMass model is not connected at all, the
 orientation object is set to a unit rotation. But this is
 the only case where this is done.
-");
-          frame_a.R = Modelica.Mechanics.MultiBody.Frames.nullRotation();
+");       frame_a.R = Modelica.Mechanics.MultiBody.Frames.nullRotation();
         else
            frame_a.t = zeros(3);
         end if;
@@ -12657,8 +12650,7 @@ the only case where this is done.
     end Utilities;
 
     partial model PartialContactBlock "base model for the contact blocks"
-    import SI =
-              Modelica.SIunits;
+    import SI = Modelica.SIunits;
       parameter SI.TranslationalSpringConstant springCoefficient=10000;
       parameter SI.TranslationalDampingConstant dampingCoefficient=10000;
       parameter Real n1=1.5;
@@ -12739,11 +12731,5 @@ the only case where this is done.
   end Interfaces;
 
 
-  annotation (Window(
-    x=0.45,
-    y=0.01,
-    width=0.44,
-    height=0.65,
-    library=1,
-    autolayout=1),version="0.1.0", uses(Modelica(version="3.2")), preferredView="info");
+  annotation (version="0.1.0", uses(Modelica(version="3.2")), preferredView="info");
 end IdealizedContact;
