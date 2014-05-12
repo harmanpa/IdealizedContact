@@ -12238,7 +12238,7 @@ Integration of the two blocks is in progress.")}));
         // relationships between quantities of frame_a and of frame_b
         frame_b.r_0 = frame_a.r_0;
 
-        if rooted(frame_a.R) then
+        if Connections.rooted(frame_a.R) then
           R_rel = Modelica.Mechanics.MultiBody.Frames.planarRotation(e, phi_ref, w);
           frame_b.R = Modelica.Mechanics.MultiBody.Frames.absoluteRotation(frame_a.R, R_rel);
           frame_a.f = -Modelica.Mechanics.MultiBody.Frames.resolve1(R_rel, frame_b.f);
@@ -12529,7 +12529,7 @@ Possible reasons:
         // relationships between quantities of frame_a and of frame_b
         frame_b.r_0 = frame_a.r_0;
 
-        if rooted(frame_a.R) then
+        if Connections.rooted(frame_a.R) then
           R_rel = Modelica.Mechanics.MultiBody.Frames.planarRotation(e, phi_offset + phi, w);
           frame_b.R = Modelica.Mechanics.MultiBody.Frames.absoluteRotation(frame_a.R, R_rel);
           frame_a.f = -Modelica.Mechanics.MultiBody.Frames.resolve1(R_rel, frame_b.f);
