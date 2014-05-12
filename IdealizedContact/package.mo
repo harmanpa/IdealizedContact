@@ -2450,10 +2450,6 @@ Integration of the two blocks is in progress.")}));
           points={{63.41,-40},{98,-40}},
           color={255,128,0},
           smooth=Smooth.None));
-      connect(contact_a,contact_a)  annotation (Line(
-          points={{98,-40},{98,-40}},
-          color={255,128,0},
-          smooth=Smooth.None));
       connect(sphericalBody.frame_b, sphericalContactSurface.frame_a)
         annotation (Line(
           points={{8,-40},{21.02,-40}},
