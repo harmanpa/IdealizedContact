@@ -3010,144 +3010,180 @@ Integration of the two blocks is in progress.")}));
   package ContactBlock
   extends Modelica.Icons.Package;
     model Contact
-      import SI = Modelica.SIunits;
-      inner parameter SI.TranslationalSpringConstant springCoefficient=1000000
-      "spring coefficient to calculate normal force"   annotation(Dialog(group="Normal force"));
-      inner parameter SI.TranslationalDampingConstant dampingCoefficient=100000
-      "damper coefficient to calculate normal force"   annotation(Dialog(group="Normal force"));
-      inner parameter Real n1 = 1.5 "stiffness exponent" annotation(Dialog(group="Normal force"));
-      inner parameter Real n2 = n1 "indentation exponent" annotation(Dialog(group="Normal force"));
-      //formula to determine normal force: fn=c*p^n1+d*p^n2*der(p)   p: penetration
-      inner parameter SI.Distance p_max=0.001 "maximum penetration depth" annotation(Dialog(group="Normal force"));
+    import SI = Modelica.SIunits;
+    parameter SI.TranslationalSpringConstant springCoefficient=1000000
+      "spring coefficient to calculate normal force"
+      annotation (Dialog(group="Normal force"));
+    parameter SI.TranslationalDampingConstant dampingCoefficient=100000
+      "damper coefficient to calculate normal force"
+      annotation (Dialog(group="Normal force"));
+    parameter Real n1=1.5 "stiffness exponent"
+      annotation (Dialog(group="Normal force"));
+    parameter Real n2=n1 "indentation exponent"
+      annotation (Dialog(group="Normal force"));
+    //formula to determine normal force: fn=c*p^n1+d*p^n2*der(p)   p: penetration
+    parameter SI.Distance p_max=0.001 "maximum penetration depth"
+      annotation (Dialog(group="Normal force"));
 
-      parameter SI.CoefficientOfFriction mue_k=0.03
-      "coefficient of kinetic friction"   annotation(Dialog(group="Stribeck curve"));
-      parameter SI.CoefficientOfFriction mue_s=0.04
-      "coefficient of static friction"   annotation(Dialog(group="Stribeck curve"));
+    parameter SI.CoefficientOfFriction mue_k=0.03
+      "coefficient of kinetic friction"
+      annotation (Dialog(group="Stribeck curve"));
+    parameter SI.CoefficientOfFriction mue_s=0.04
+      "coefficient of static friction"
+      annotation (Dialog(group="Stribeck curve"));
 
-      inner parameter SI.CoefficientOfFriction mue_r=0
-      "coefficient of rolling friction"   annotation(Dialog(group="Stribeck curve"));
+    parameter SI.CoefficientOfFriction mue_r=0
+      "coefficient of rolling friction"
+      annotation (Dialog(group="Stribeck curve"));
 
-      parameter Real k_v( unit="s2/m")=0 "gradient of viscous friction" annotation(Dialog(group="Stribeck curve"));
-      parameter SI.Velocity v_e1=0.01 "limit velocity of static friction" annotation(Dialog(group="Stribeck curve"));
-      parameter SI.Velocity v_e2=0.1 "limit velocity of kinetic friction" annotation(Dialog(group="Stribeck curve"));
+    parameter Real k_v(unit="s2/m") = 0 "gradient of viscous friction"
+      annotation (Dialog(group="Stribeck curve"));
+    parameter SI.Velocity v_e1=0.01 "limit velocity of static friction"
+      annotation (Dialog(group="Stribeck curve"));
+    parameter SI.Velocity v_e2=0.1 "limit velocity of kinetic friction"
+      annotation (Dialog(group="Stribeck curve"));
 
-      inner parameter Real gamma1=(mue_s-tanh(2*v_e1/v_e2)*gamma4-k_v*2*v_e1)/(tanh(2*v_e1/v_e1)-tanh(2*v_e1/v_e2))-gamma4
-      "friction parameter 1"                                                                                                     annotation(Dialog(tab="Friction model"));
-      inner parameter Real gamma2=2/v_e1 "friction parameter 2" annotation(Dialog(tab="Friction model"));
-      inner parameter Real gamma3=3/v_e2 "friction parameter 3" annotation(Dialog(tab="Friction model"));
-      inner parameter Real gamma4=mue_k-k_v*v_e2 "friction parameter 4" annotation(Dialog(tab="Friction model"));
-      inner parameter Real gamma5=gamma2 "friction parameter 5" annotation(Dialog(tab="Friction model"));
-      inner parameter Real gamma6=k_v "friction parameter 6" annotation(Dialog(tab="Friction model"));
+    parameter Real gamma1=(mue_s - tanh(2*v_e1/v_e2)*gamma4 - k_v*2*v_e1)/(tanh(
+        2*v_e1/v_e1) - tanh(2*v_e1/v_e2)) - gamma4 "friction parameter 1"
+      annotation (Dialog(tab="Friction model"));
+    parameter Real gamma2=2/v_e1 "friction parameter 2"
+      annotation (Dialog(tab="Friction model"));
+    parameter Real gamma3=3/v_e2 "friction parameter 3"
+      annotation (Dialog(tab="Friction model"));
+    parameter Real gamma4=mue_k - k_v*v_e2 "friction parameter 4"
+      annotation (Dialog(tab="Friction model"));
+    parameter Real gamma5=gamma2 "friction parameter 5"
+      annotation (Dialog(tab="Friction model"));
+    parameter Real gamma6=k_v "friction parameter 6"
+      annotation (Dialog(tab="Friction model"));
 
-      inner parameter Boolean exact=false
+    parameter Boolean exact=false
       "=true for exact contact point movement; =false for filtered movement";
-      inner parameter SI.Frequency f=10000
-      "filter frequency to filter contact point movement"                                       annotation(Dialog(enable=not exact));
+    parameter SI.Frequency f=10000
+      "filter frequency to filter contact point movement"
+      annotation (Dialog(enable=not exact));
 
-      inner parameter Boolean animation=true "= true to animate contact points"
-                                                                                annotation(Dialog(tab="Animation"));
-      inner parameter Modelica.SIunits.Radius radiusContactPoint=0.0025
-      "radius of contact point animation"   annotation(Dialog(tab="Animation"));
-      inner parameter Modelica.Mechanics.MultiBody.Types.Color
-        colorContactPoints1 = {0,180,0} "color of contact points of body 1" annotation(Dialog(tab="Animation"));
-      inner parameter Modelica.Mechanics.MultiBody.Types.Color
-        colorContactPoints2 = {255,0,255} "color of contact points of body 2" annotation(Dialog(tab="Animation"));
+    parameter Boolean animation=true "= true to animate contact points"
+      annotation (Dialog(tab="Animation"));
+    parameter Modelica.SIunits.Radius radiusContactPoint=0.0025
+      "radius of contact point animation" annotation (Dialog(tab="Animation"));
+    parameter Modelica.Mechanics.MultiBody.Types.Color colorContactPoints1={0,
+        180,0} "color of contact points of body 1"
+      annotation (Dialog(tab="Animation"));
+    parameter Modelica.Mechanics.MultiBody.Types.Color colorContactPoints2={255,
+        0,255} "color of contact points of body 2"
+      annotation (Dialog(tab="Animation"));
 
-      replaceable
-      IdealizedContact.ContactBlock.PunctiformContact.SphereToRectangle           contactDefinition
-        constrainedby IdealizedContact.Components.PartialContactBlock
+    replaceable
+      IdealizedContact.ContactBlock.PunctiformContact.SphereToRectangle
+      contactDefinition constrainedby
+      IdealizedContact.Components.PartialContactBlock(
+      final springCoefficient=springCoefficient,
+      final dampingCoefficient=dampingCoefficient,
+      final n1=n1,
+      final n2=n2,
+      final mue_r=mue_r,
+      final gamma1=gamma1,
+      final gamma2=gamma2,
+      final gamma3=gamma3,
+      final gamma4=gamma4,
+      final gamma5=gamma5,
+      final gamma6=gamma6,
+      final p_max=p_max,
+      final exact=exact,
+      final f=f,
+      final animation=animation,
+      final radiusContactPoint=radiusContactPoint,
+      final colorContactPoints1=colorContactPoints1,
+      final colorContactPoints2=colorContactPoints2)
       "select contact surface combination (first surface mentioned must be connected to port 1)"
-        annotation (Placement(transformation(extent={{-14,-24},{44,34}})),  choices(
-              choice(redeclare
-            IdealizedContact.ContactBlock.PunctiformContact.SphereToRectangle                                     contactDefinition
-            "SphereToRectangle"),
-              choice(redeclare
+      annotation (
+      Placement(transformation(extent={{-14,-24},{44,34}})),
+      choices(
+        choice(redeclare
+            IdealizedContact.ContactBlock.PunctiformContact.SphereToRectangle
+            contactDefinition "SphereToRectangle"),
+        choice(redeclare
             IdealizedContact.ContactBlock.PunctiformContact.SphereToCircle
-              contactDefinition "SphereToCircle"),
-              choice(redeclare
-            IdealizedContact.ContactBlock.PunctiformContact.SphereToCylinder                                      contactDefinition
-            "SphereToCylinder"),
-              choice(redeclare
+            contactDefinition "SphereToCircle"),
+        choice(redeclare
+            IdealizedContact.ContactBlock.PunctiformContact.SphereToCylinder
+            contactDefinition "SphereToCylinder"),
+        choice(redeclare
             IdealizedContact.ContactBlock.PunctiformContact.SphereToSphere
-              contactDefinition "SphereToSphere"),
-              choice(redeclare
+            contactDefinition "SphereToSphere"),
+        choice(redeclare
             IdealizedContact.ContactBlock.LinearContact.CylinderToRectangle
-              contactDefinition "CylinderToRectangle"),
-              choice(redeclare
-            IdealizedContact.ContactBlock.LinearContact.CylinderToCircle                                          contactDefinition
-            "CylinderToCircle"),
-              choice(redeclare
+            contactDefinition "CylinderToRectangle"),
+        choice(redeclare
+            IdealizedContact.ContactBlock.LinearContact.CylinderToCircle
+            contactDefinition "CylinderToCircle"),
+        choice(redeclare
             IdealizedContact.ContactBlock.LinearContact.CylinderToCylinderLine
-              contactDefinition "CylinderToCylinderLine"),
-              choice(redeclare
+            contactDefinition "CylinderToCylinderLine"),
+        choice(redeclare
             IdealizedContact.ContactBlock.LinearContact.CylinderToCylinderPoint
-              contactDefinition "CylinderToCylinderPoint"),
-              choice(redeclare
+            contactDefinition "CylinderToCylinderPoint"),
+        choice(redeclare
             IdealizedContact.ContactBlock.LinearContact.CylinderToCylinderCombined
-                                                                                                                contactDefinition
-            "CylinderToCylinderCombined"),
-              choice(redeclare
+            contactDefinition "CylinderToCylinderCombined"),
+        choice(redeclare
             IdealizedContact.ContactBlock.PlanarContact.RectangleToRectangle
-              contactDefinition "RectangleToRectangle"),
-              choice(redeclare
-            IdealizedContact.ContactBlock.PlanarContact.CircleToRectangle                                         contactDefinition
-            "CircleToRectangle")),
-                Dialog(group="Contact specification"));
-      IdealizedContact.Interfaces.Contact_b Port1
-        annotation (Placement(transformation(extent={{2,60},{22,80}}),
-            iconTransformation(extent={{-20,90},{20,128}})));
-      IdealizedContact.Interfaces.Contact_b Port2
-        annotation (Placement(transformation(extent={{8,-86},{28,-66}}),
-            iconTransformation(extent={{-20,-130},{20,-92}})));
+            contactDefinition "RectangleToRectangle"),
+        choice(redeclare
+            IdealizedContact.ContactBlock.PlanarContact.CircleToRectangle
+            contactDefinition "CircleToRectangle")),
+      Dialog(group="Contact specification"));
+    IdealizedContact.Interfaces.Contact_b Port1 annotation (Placement(
+          transformation(extent={{2,60},{22,80}}), iconTransformation(extent={{
+              -20,90},{20,128}})));
+    IdealizedContact.Interfaces.Contact_b Port2 annotation (Placement(
+          transformation(extent={{8,-86},{28,-66}}), iconTransformation(extent=
+              {{-20,-130},{20,-92}})));
 
     equation
-      connect(contactDefinition.frame_a, Port1.frame)
-                                                 annotation (Line(
-          points={{-14.58,22.4},{-42,22.4},{-42,52},{12,52},{12,70}},
-          color={95,95,95},
-          thickness=0.5,
-          smooth=Smooth.None));
-      connect(contactDefinition.frame_b, Port2.frame)
-                                                annotation (Line(
-          points={{-14.58,-12.4},{-38,-12.4},{-38,-60},{18,-60},{18,-76}},
-          color={95,95,95},
-          thickness=0.5,
-          smooth=Smooth.None));
-      connect(Port1.u, contactDefinition.vector_1)
-                                             annotation (Line(
-          points={{12,70},{12,52},{-52,52},{-52,7.9},{-16.32,7.9}},
-          color={255,128,0},
-          smooth=Smooth.None));
-      connect(contactDefinition.vector_2, Port2.u)
-                                             annotation (Line(
-          points={{-16.32,-3.7},{-50,-3.7},{-50,-60},{18,-60},{18,-76}},
-          color={255,128,0},
-          smooth=Smooth.None));
-        annotation (Placement(transformation(extent={{-20,0},{0,20}})),
-                  Diagram(graphics), Icon(graphics={Rectangle(
-              extent={{-100,100},{100,-100}},
-              lineColor={255,128,0},
-              fillColor={255,128,0},
-              fillPattern=FillPattern.Solid), Text(
-              extent={{-94,28},{94,-18}},
-              lineColor={255,255,255},
-              fillColor={255,255,255},
-              fillPattern=FillPattern.Solid,
-              textString="%name"),
-            Text(
-              extent={{28,-106},{44,-134}},
-              lineColor={255,128,0},
-              fillColor={255,255,255},
-              fillPattern=FillPattern.Solid,
-              textString="2"),
-            Text(
-              extent={{26,132},{42,104}},
-              lineColor={255,128,0},
-              fillColor={255,255,255},
-              fillPattern=FillPattern.Solid,
-              textString="1")}),
-        Documentation(info="<!DOCTYPE html><html>
+    connect(contactDefinition.frame_a, Port1.frame) annotation (Line(
+        points={{-14.58,22.4},{-42,22.4},{-42,52},{12,52},{12,70}},
+        color={95,95,95},
+        thickness=0.5,
+        smooth=Smooth.None));
+    connect(contactDefinition.frame_b, Port2.frame) annotation (Line(
+        points={{-14.58,-12.4},{-38,-12.4},{-38,-60},{18,-60},{18,-76}},
+        color={95,95,95},
+        thickness=0.5,
+        smooth=Smooth.None));
+    connect(Port1.u, contactDefinition.vector_1) annotation (Line(
+        points={{12,70},{12,52},{-52,52},{-52,7.9},{-16.32,7.9}},
+        color={255,128,0},
+        smooth=Smooth.None));
+    connect(contactDefinition.vector_2, Port2.u) annotation (Line(
+        points={{-16.32,-3.7},{-50,-3.7},{-50,-60},{18,-60},{18,-76}},
+        color={255,128,0},
+        smooth=Smooth.None));
+    annotation (Icon(graphics={
+          Rectangle(
+            extent={{-100,100},{100,-100}},
+            lineColor={255,128,0},
+            fillColor={255,128,0},
+            fillPattern=FillPattern.Solid),
+          Text(
+            extent={{-94,28},{94,-18}},
+            lineColor={255,255,255},
+            fillColor={255,255,255},
+            fillPattern=FillPattern.Solid,
+            textString="%name"),
+          Text(
+            extent={{28,-106},{44,-134}},
+            lineColor={255,128,0},
+            fillColor={255,255,255},
+            fillPattern=FillPattern.Solid,
+            textString="2"),
+          Text(
+            extent={{26,132},{42,104}},
+            lineColor={255,128,0},
+            fillColor={255,255,255},
+            fillPattern=FillPattern.Solid,
+            textString="1")}), Documentation(info="<!DOCTYPE html><html>
 <p>Depending on the shape, we use 1 (sphere), 2 (cylinder) or 4 (plane) points to describe the surfaces of the contact partners. These constitute potential contact points. For each of them the collision detection is performed. For this purpose, analytic solutions for simple geometries are provided in the library. As the contact region may alter with the moving bodies, the contact points will also move on the defined surface. </p>
 <p>Then, the contact block calculates the appropriate force depending on the combination of surfaces. So, using it the respective combination of contact surface has to be chosen at first by setting the parameter contactDefinition. This will use the Modelica replaceable statement to define the appropiate components of the contact block. Then connect the contact interfaces of the two contact surfaces to the respective port of the contact block (first&nbsp;surface&nbsp;mentioned&nbsp;must&nbsp;be&nbsp;connected&nbsp;to&nbsp;port&nbsp;1).</p>
 <p>In the case of a collision of the two connected surface (the contact condition holds for at least one contact point) a three-dimensional contact force is applied. It consists of both the normal force and the tangential friction. The respective directions can be obtained by means of the local coordinate systems in the contact points. As compared to more complex models, the continuous surface layer is replaced by a nonlinear spring/damper element. Consequently, the normal force Fn&nbsp;is determined by means of the penetration p&nbsp;and the penetration velocity. A continuous contact force model with hysteresis damping according to [1] is implemented. Nevertheless, choosing n1=1 and n=0&nbsp;one can get the linear Kelvin-Voigt model, where the coefficients are the spring and damping constant. Choosing n1=n2&nbsp;one will get the formulation according to [2].</p>
@@ -3227,38 +3263,20 @@ Integration of the two blocks is in progress.")}));
 
     package PunctiformContact
       model SphereToSphere
-       extends IdealizedContact.Components.PartialContactBlock;
-        import SI = Modelica.SIunits;
-        outer parameter SI.TranslationalSpringConstant springCoefficient=1000000;
-        outer parameter SI.TranslationalDampingConstant dampingCoefficient=1000000;
-        outer parameter Real n1 = 1.5;
-        outer parameter Real n2 = n1;
-        outer parameter SI.CoefficientOfFriction mue_r=0.0001;
-        outer parameter Real gamma1=1;
-        outer parameter Real gamma2=1;
-        outer parameter Real gamma3=1;
-        outer parameter Real gamma4=1;
-        outer parameter Real gamma5=1;
-        outer parameter Real gamma6=1;
-        outer parameter SI.Distance p_max=0.001;
-        outer parameter SI.Frequency f=100000;
-        outer parameter Boolean animation=true;
-        outer parameter Modelica.SIunits.Radius radiusContactPoint=0.005;
-        outer parameter Modelica.Mechanics.MultiBody.Types.Color
-          colorContactPoints1 =                                                {0,180,0};
-        outer parameter Modelica.Mechanics.MultiBody.Types.Color
-          colorContactPoints2 =                                                {255,0,255};
+        extends IdealizedContact.Components.PartialContactBlock;
 
     protected
-        parameter Real N1 = if n1==0 then Modelica.Constants.eps else n1;   //to avoid mathematical error in case of 0^0
-        parameter Real N2 = if n2==0 then Modelica.Constants.eps else n2;
+        parameter Real N1=if n1 == 0 then Modelica.Constants.eps else n1;
+        //to avoid mathematical error in case of 0^0
+        parameter Real N2=if n2 == 0 then Modelica.Constants.eps else n2;
     public
         IdealizedContact.ContactBlock.PunctiformContact.Components.MovePointSphereToSphere
           move_point_sphere_spherel(
           f=f,
           colorContactPoint_Ball1=colorContactPoints1,
           colorContactPoint_Ball2=colorContactPoints2,
-          radiusContactPoint=radiusContactPoint, Animation=animation)
+          radiusContactPoint=radiusContactPoint,
+          Animation=animation)
           annotation (Placement(transformation(extent={{-60,20},{-20,60}})));
         IdealizedContact.ContactBlock.PunctiformContact.Components.ForceSphereToSphere
           force_sphere_sphere(
@@ -3273,63 +3291,54 @@ Integration of the two blocks is in progress.")}));
           gamma4=gamma4,
           gamma5=gamma5,
           gamma6=gamma6,
-          mue_r=mue_r)
-          annotation (Placement(transformation(extent={{0,-40},{40,0}})));
+          mue_r=mue_r) annotation (Placement(transformation(extent={{0,-40},{40,0}})));
 
       equation
         connect(force_sphere_sphere.frame_a2, move_point_sphere_spherel.frame_b2)
-                                                                         annotation (
-            Line(
+          annotation (Line(
             points={{12,0},{12,28},{-19.6,28}},
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
         connect(move_point_sphere_spherel.frame_b1, force_sphere_sphere.frame_a1)
-                                                                         annotation (
-            Line(
+          annotation (Line(
             points={{-19.6,52},{24,52},{24,0}},
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
-        connect(move_point_sphere_spherel.frame_a1, frame_a)
-                                                        annotation (Line(
+        connect(move_point_sphere_spherel.frame_a1, frame_a) annotation (Line(
             points={{-60.4,52},{-80,52},{-80,60},{-102,60}},
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
-        connect(move_point_sphere_spherel.frame_a2, frame_b)
-                                                        annotation (Line(
+        connect(move_point_sphere_spherel.frame_a2, frame_b) annotation (Line(
             points={{-60.4,28},{-68,28},{-68,-60},{-102,-60}},
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
-        connect(move_point_sphere_spherel.vector_ball1, vector_1)
-                                                             annotation (Line(
+        connect(move_point_sphere_spherel.vector_ball1, vector_1) annotation (Line(
             points={{-61.6,42},{-84,42},{-84,10},{-108,10}},
             color={0,0,127},
             smooth=Smooth.None));
-        connect(move_point_sphere_spherel.vector_ball2, vector_2)
-                                                             annotation (Line(
+        connect(move_point_sphere_spherel.vector_ball2, vector_2) annotation (Line(
             points={{-61.6,34},{-78,34},{-78,-30},{-108,-30}},
             color={0,0,127},
             smooth=Smooth.None));
-        connect(force_sphere_sphere.Vector_ball1, vector_1)
-                                                        annotation (Line(
+        connect(force_sphere_sphere.Vector_ball1, vector_1) annotation (Line(
             points={{-1.6,-28},{-84,-28},{-84,10},{-108,10}},
             color={0,0,127},
             smooth=Smooth.None));
-        connect(force_sphere_sphere.vector_ball2, vector_2)
-                                                        annotation (Line(
+        connect(force_sphere_sphere.vector_ball2, vector_2) annotation (Line(
             points={{-1.6,-36},{-78,-36},{-78,-30},{-108,-30}},
             color={0,0,127},
             smooth=Smooth.None));
-        connect(force_sphere_sphere.w_mov2, move_point_sphere_spherel.w2)
-          annotation (Line(
+        connect(force_sphere_sphere.w_mov2, move_point_sphere_spherel.w2) annotation (
+           Line(
             points={{-1.6,-1.6},{-25.8,-1.6},{-25.8,18},{-25.2,18}},
             color={0,0,127},
             smooth=Smooth.None));
-        connect(force_sphere_sphere.w_mov1, move_point_sphere_spherel.w1)
-          annotation (Line(
+        connect(force_sphere_sphere.w_mov1, move_point_sphere_spherel.w1) annotation (
+           Line(
             points={{-1.6,-9.2},{-36,-9.2},{-36,18}},
             color={0,0,127},
             smooth=Smooth.None));
@@ -3343,44 +3352,23 @@ Integration of the two blocks is in progress.")}));
             points={{-1.6,-22},{-50.8,-22},{-50.8,18}},
             color={0,0,127},
             smooth=Smooth.None));
-        annotation (Icon(graphics={                   Rectangle(extent={{-100,
-                    100},{100,-100}},
-                                 lineColor={255,128,0}), Text(
+        annotation (Icon(graphics={Text(
                 extent={{-82,10},{82,-10}},
                 lineColor={0,0,255},
-                textString="Ball-Ball")}),  Diagram(graphics));
+                textString="Ball-Ball")}), Diagram(graphics));
       end SphereToSphere;
     extends Modelica.Icons.Package;
       model SphereToCylinder
         extends IdealizedContact.Components.PartialContactBlock;
-        import SI = Modelica.SIunits;
-        outer parameter SI.TranslationalSpringConstant springCoefficient=1000000;
-        outer parameter SI.TranslationalDampingConstant dampingCoefficient=1000000;
-        outer parameter Real n1 = 1.5;
-        outer parameter Real n2 = n1;
-        outer parameter SI.CoefficientOfFriction mue_r=0.0001;
-        outer parameter Real gamma1=1;
-        outer parameter Real gamma2=1;
-        outer parameter Real gamma3=1;
-        outer parameter Real gamma4=1;
-        outer parameter Real gamma5=1;
-        outer parameter Real gamma6=1;
-        outer parameter SI.Distance p_max=0.001;
-        outer parameter SI.Frequency f=100000;
-        outer parameter Boolean animation=true;
-        outer parameter Modelica.SIunits.Radius radiusContactPoint=0.005;
-        outer parameter Modelica.Mechanics.MultiBody.Types.Color
-          colorContactPoints1 =                                                {0,180,0};
-        outer parameter Modelica.Mechanics.MultiBody.Types.Color
-          colorContactPoints2 =                                                {255,0,255};
 
     protected
-        parameter Real N1 = if n1==0 then Modelica.Constants.eps else n1; //to avoid mathematical error in case of 0^0
-        parameter Real N2 = if n2==0 then Modelica.Constants.eps else n2;
+        parameter Real N1=if n1 == 0 then Modelica.Constants.eps else n1;
+        //to avoid mathematical error in case of 0^0
+        parameter Real N2=if n2 == 0 then Modelica.Constants.eps else n2;
 
     public
         IdealizedContact.ContactBlock.PunctiformContact.Components.MovePointSphereToCylinder
-                                            move_point_ball_cylinder(
+          move_point_ball_cylinder(
           f=f,
           Animation=animation,
           radiusContactPoint=radiusContactPoint,
@@ -3388,7 +3376,7 @@ Integration of the two blocks is in progress.")}));
           Color_contact_point_cylinder=colorContactPoints2)
           annotation (Placement(transformation(extent={{-60,20},{-20,60}})));
         IdealizedContact.ContactBlock.PunctiformContact.Components.ForceSphereToCylinder
-                                       force_ball_cylinder(
+          force_ball_cylinder(
           c=springCoefficient,
           d=dampingCoefficient,
           n1=N1,
@@ -3403,13 +3391,13 @@ Integration of the two blocks is in progress.")}));
           mue_r=mue_r)
           annotation (Placement(transformation(extent={{-10,-40},{30,0}})));
       equation
-        connect(move_point_ball_cylinder.frame_b1,force_ball_cylinder. frame_a1)
+        connect(move_point_ball_cylinder.frame_b1, force_ball_cylinder.frame_a1)
           annotation (Line(
             points={{-19.6,28},{2,28},{2,0.4}},
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
-        connect(move_point_ball_cylinder.frame_b2,force_ball_cylinder. frame_a2)
+        connect(move_point_ball_cylinder.frame_b2, force_ball_cylinder.frame_a2)
           annotation (Line(
             points={{-19.6,52},{18,52},{18,0.4}},
             color={95,95,95},
@@ -3425,8 +3413,7 @@ Integration of the two blocks is in progress.")}));
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
-        connect(vector_1, move_point_ball_cylinder.Vector_ball) annotation (
-            Line(
+        connect(vector_1, move_point_ball_cylinder.Vector_ball) annotation (Line(
             points={{-108,10},{-86,10},{-86,44},{-61.6,44}},
             color={0,0,127},
             smooth=Smooth.None));
@@ -3467,8 +3454,7 @@ Integration of the two blocks is in progress.")}));
             points={{-11.6,-26},{-56,-26},{-56,18}},
             color={0,0,127},
             smooth=Smooth.None));
-        annotation (Diagram(graphics), Icon(graphics={Rectangle(extent={{-100,100},{100,
-                    -100}},      lineColor={255,128,0}), Text(
+        annotation (Diagram(graphics), Icon(graphics={Text(
                 extent={{-82,10},{82,-10}},
                 lineColor={0,0,255},
                 textString="Ball-Cylinder")}));
@@ -3476,43 +3462,20 @@ Integration of the two blocks is in progress.")}));
 
       model SphereToRectangle
         extends IdealizedContact.Components.PartialContactBlock;
-        import SI = Modelica.SIunits;
-
-        outer parameter SI.TranslationalSpringConstant springCoefficient=1000000;
-        outer parameter SI.TranslationalDampingConstant dampingCoefficient=1000000;
-        outer parameter Real n1 = 1.5;
-        outer parameter Real n2 = n1;
-        outer parameter SI.CoefficientOfFriction mue_r=0.0001;
-        outer parameter Real gamma1=1;
-        outer parameter Real gamma2=1;
-        outer parameter Real gamma3=1;
-        outer parameter Real gamma4=1;
-        outer parameter Real gamma5=1;
-        outer parameter Real gamma6=1;
-        outer parameter SI.Distance p_max=0.001;
-        outer parameter SI.Frequency f=10000000;
-        outer parameter Boolean animation=true;
-        outer parameter Modelica.SIunits.Radius radiusContactPoint = 0.005;
-
-        outer parameter Modelica.Mechanics.MultiBody.Types.Color
-          colorContactPoints1 =                                                {0,180,0};
-        outer parameter Modelica.Mechanics.MultiBody.Types.Color
-          colorContactPoints2 =                                                {255,0,255};
-
     protected
-        parameter Real N1 = if n1==0 then Modelica.Constants.eps else n1;//to avoid mathematical error in case of 0^0
-        parameter Real N2 = if n2==0 then Modelica.Constants.eps else n2;
+        parameter Real N1=if n1 == 0 then Modelica.Constants.eps else n1;
+        //to avoid mathematical error in case of 0^0
+        parameter Real N2=if n2 == 0 then Modelica.Constants.eps else n2;
 
     public
         Modelica.Mechanics.MultiBody.Interfaces.Frame_a frame_b
-        "from center of rectangle"
-          annotation (Placement(transformation(extent={{-118,-76},{-86,-44}}),
-              iconTransformation(extent={{-118,-76},{-86,-44}})));
+        "from center of rectangle"   annotation (Placement(transformation(extent={{-118,
+                  -76},{-86,-44}}), iconTransformation(extent={{-118,-76},{-86,-44}})));
         Modelica.Mechanics.MultiBody.Interfaces.Frame_a frame_a
         "center of ball mass"
           annotation (Placement(transformation(extent={{-118,44},{-86,76}})));
         IdealizedContact.ContactBlock.PunctiformContact.Components.MovePointSphereToRectangle
-                                         move_point_ball_plane(
+          move_point_ball_plane(
           f=f,
           Animation=animation,
           radiusContactPoint=radiusContactPoint,
@@ -3520,13 +3483,13 @@ Integration of the two blocks is in progress.")}));
           Color_contact_point_rectangle=colorContactPoints2)
           annotation (Placement(transformation(extent={{-60,20},{-20,60}})));
         IdealizedContact.ContactBlock.PunctiformContact.Components.ForceSphereToRectangle
-                                        force_ball_rectangle(
+          force_ball_rectangle(
           c=springCoefficient,
           d=dampingCoefficient,
           n1=N1,
           n2=N2,
           t_max=p_max,
-              gamma1=gamma1,
+          gamma1=gamma1,
           gamma2=gamma2,
           gamma3=gamma3,
           gamma4=gamma4,
@@ -3535,25 +3498,24 @@ Integration of the two blocks is in progress.")}));
           mue_r=mue_r)
           annotation (Placement(transformation(extent={{-20,-40},{20,0}})));
       equation
-        connect(move_point_ball_plane.frame_b1,force_ball_rectangle. frame_a1)
+        connect(move_point_ball_plane.frame_b1, force_ball_rectangle.frame_a1)
           annotation (Line(
             points={{-19.6,28},{-12,28},{-12,0.4}},
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
-        connect(move_point_ball_plane.frame_b2,force_ball_rectangle. frame_a2)
+        connect(move_point_ball_plane.frame_b2, force_ball_rectangle.frame_a2)
           annotation (Line(
             points={{-19.6,52},{3.55271e-016,52},{3.55271e-016,0.4}},
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
-        connect(frame_a, move_point_ball_plane.frame_a2)
-                                                      annotation (Line(
+        connect(frame_a, move_point_ball_plane.frame_a2) annotation (Line(
             points={{-102,60},{-82,60},{-82,52},{-60.4,52}},
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
-        connect(move_point_ball_plane.frame_a1, frame_b)   annotation (Line(
+        connect(move_point_ball_plane.frame_a1, frame_b) annotation (Line(
             points={{-60.4,28},{-66,28},{-66,-60},{-102,-60}},
             color={95,95,95},
             thickness=0.5,
@@ -3579,8 +3541,7 @@ Integration of the two blocks is in progress.")}));
             points={{-18.4,40},{9.6,40},{9.6,1.6}},
             color={0,0,127},
             smooth=Smooth.None));
-        connect(force_ball_rectangle.w_mov, move_point_ball_plane.w)
-          annotation (Line(
+        connect(force_ball_rectangle.w_mov, move_point_ball_plane.w) annotation (Line(
             points={{-21.6,-24},{-48,-24},{-48,18.4}},
             color={0,0,127},
             smooth=Smooth.None));
@@ -3594,8 +3555,7 @@ Integration of the two blocks is in progress.")}));
             points={{-21.6,-9.2},{-21.6,-3.6},{-24,-3.6},{-24,18.4}},
             color={0,0,127},
             smooth=Smooth.None));
-        annotation (Diagram(graphics), Icon(graphics={Rectangle(extent={{-100,100},{100,
-                    -100}},      lineColor={255,128,0}), Text(
+        annotation (Diagram(graphics), Icon(graphics={Text(
                 extent={{-82,10},{82,-10}},
                 lineColor={0,0,255},
                 textString="Ball-Rectangle")}));
@@ -3603,34 +3563,15 @@ Integration of the two blocks is in progress.")}));
 
       model SphereToCircle
         extends IdealizedContact.Components.PartialContactBlock;
-        import SI = Modelica.SIunits;
-        outer parameter SI.TranslationalSpringConstant springCoefficient=1000000;
-        outer parameter SI.TranslationalDampingConstant dampingCoefficient=1000000;
-        outer parameter Real n1 = 1.5;
-        outer parameter Real n2 = n1;
-        outer parameter SI.CoefficientOfFriction mue_r=0.0001;
-        outer parameter Real gamma1=1;
-        outer parameter Real gamma2=1;
-        outer parameter Real gamma3=1;
-        outer parameter Real gamma4=1;
-        outer parameter Real gamma5=1;
-        outer parameter Real gamma6=1;
-        outer parameter SI.Distance p_max=0.001;
-        outer parameter SI.Frequency f=100000;
-        outer parameter Boolean animation=true;
-        outer parameter Modelica.SIunits.Radius radiusContactPoint=0.005;
-        outer parameter Modelica.Mechanics.MultiBody.Types.Color
-          colorContactPoints1 =                                                {0,180,0};
-        outer parameter Modelica.Mechanics.MultiBody.Types.Color
-          colorContactPoints2 =                                                {255,0,255};
 
     protected
-        parameter Real N1 = if n1==0 then Modelica.Constants.eps else n1;//to avoid mathematical error in case of 0^0
-        parameter Real N2 = if n2==0 then Modelica.Constants.eps else n2;
+        parameter Real N1=if n1 == 0 then Modelica.Constants.eps else n1;
+        //to avoid mathematical error in case of 0^0
+        parameter Real N2=if n2 == 0 then Modelica.Constants.eps else n2;
 
     public
         IdealizedContact.ContactBlock.PunctiformContact.Components.MovePointSphereToCircle
-                                          move_point_ball_circle(
+          move_point_ball_circle(
           f=f,
           Animation=animation,
           radiusContactPoint=radiusContactPoint,
@@ -3638,7 +3579,7 @@ Integration of the two blocks is in progress.")}));
           Color_contact_point_circle=colorContactPoints2)
           annotation (Placement(transformation(extent={{-40,20},{0,60}})));
         IdealizedContact.ContactBlock.PunctiformContact.Components.ForceSphereToCircle
-                                     force_ball_circle(
+          force_ball_circle(
           c=springCoefficient,
           d=dampingCoefficient,
           n1=N1,
@@ -3650,8 +3591,7 @@ Integration of the two blocks is in progress.")}));
           gamma4=gamma4,
           gamma5=gamma5,
           gamma6=gamma6,
-          mue_r=mue_r)
-          annotation (Placement(transformation(extent={{0,-40},{40,0}})));
+          mue_r=mue_r) annotation (Placement(transformation(extent={{0,-40},{40,0}})));
         Modelica.Mechanics.MultiBody.Interfaces.Frame_a frame_b
         "center of circle"
           annotation (Placement(transformation(extent={{-118,-76},{-86,-44}})));
@@ -3659,14 +3599,12 @@ Integration of the two blocks is in progress.")}));
         "frame center of ball mass"
           annotation (Placement(transformation(extent={{-118,44},{-86,76}})));
       equation
-        connect(move_point_ball_circle.frame_a2, frame_a)
-                                                       annotation (Line(
+        connect(move_point_ball_circle.frame_a2, frame_a) annotation (Line(
             points={{-40.4,52},{-72,52},{-72,60},{-102,60}},
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
-        connect(move_point_ball_circle.frame_a1, frame_b)
-                                                         annotation (Line(
+        connect(move_point_ball_circle.frame_a1, frame_b) annotation (Line(
             points={{-40.4,28},{-70,28},{-70,-60},{-102,-60}},
             color={95,95,95},
             thickness=0.5,
@@ -3695,8 +3633,7 @@ Integration of the two blocks is in progress.")}));
             points={{-108,-30},{-56,-30},{-56,-38.8},{-1.6,-38.8}},
             color={0,0,127},
             smooth=Smooth.None));
-        connect(vector_2, move_point_ball_circle.vector_circle) annotation (
-            Line(
+        connect(vector_2, move_point_ball_circle.vector_circle) annotation (Line(
             points={{-108,-30},{-56,-30},{-56,34},{-41.6,34}},
             color={0,0,127},
             smooth=Smooth.None));
@@ -3715,13 +3652,11 @@ Integration of the two blocks is in progress.")}));
             points={{-1.6,-16},{-12,-16},{-12,18.4}},
             color={0,0,127},
             smooth=Smooth.None));
-        connect(force_ball_circle.w_mov, move_point_ball_circle.w) annotation (
-            Line(
+        connect(force_ball_circle.w_mov, move_point_ball_circle.w) annotation (Line(
             points={{-1.6,-22.8},{-28,-22.8},{-28,18.4}},
             color={0,0,127},
             smooth=Smooth.None));
-        annotation (Diagram(graphics), Icon(graphics={Rectangle(extent={{-100,100},{100,
-                    -100}},      lineColor={255,128,0}), Text(
+        annotation (Diagram(graphics), Icon(graphics={Text(
                 extent={{-82,10},{82,-10}},
                 lineColor={0,0,255},
                 textString="Ball-Circle")}));
@@ -5746,45 +5681,25 @@ Integration of the two blocks is in progress.")}));
     extends Modelica.Icons.Package;
       model CylinderToRectangle
         extends IdealizedContact.Components.PartialContactBlock;
-        import SI = Modelica.SIunits;
-        outer parameter SI.TranslationalSpringConstant springCoefficient=1000000;
-        outer parameter SI.TranslationalDampingConstant dampingCoefficient=1000000;
-        outer parameter Real n1 = 1.5;
-        outer parameter Real n2 = n1;
-        outer parameter SI.CoefficientOfFriction mue_r=0.0001;
-        outer parameter Real gamma1=1;
-        outer parameter Real gamma2=1;
-        outer parameter Real gamma3=1;
-        outer parameter Real gamma4=1;
-        outer parameter Real gamma5=1;
-        outer parameter Real gamma6=1;
-        outer parameter SI.Distance p_max=0.001;
-        outer parameter Boolean exact=false;
-        outer parameter SI.Frequency f=100000;
-        outer parameter Boolean animation=true;
-        outer parameter Modelica.SIunits.Radius radiusContactPoint=0.005;
-        outer parameter Modelica.Mechanics.MultiBody.Types.Color
-          colorContactPoints1 =                                                {0,180,0};
-        outer parameter Modelica.Mechanics.MultiBody.Types.Color
-          colorContactPoints2 =                                                {255,0,255};
 
     protected
-        parameter Real N1 = if n1==0 then Modelica.Constants.eps else n1;//to avoid mathematical error in case of 0^0
-        parameter Real N2 = if n2==0 then Modelica.Constants.eps else n2;
+        parameter Real N1=if n1 == 0 then Modelica.Constants.eps else n1;
+        //to avoid mathematical error in case of 0^0
+        parameter Real N2=if n2 == 0 then Modelica.Constants.eps else n2;
 
     public
         IdealizedContact.ContactBlock.LinearContact.Components.MovePointCylinderToRectangle
-                                                 move_point[2](
+          move_point[2](
           q={1,-1},
           f={f,f},
-          exact={exact,exact}, Animation={animation,animation},
-          Color_contact_point_rectangle={colorContactPoints1,
-              colorContactPoints1},
+          exact={exact,exact},
+          Animation={animation,animation},
+          Color_contact_point_rectangle={colorContactPoints1,colorContactPoints1},
           radiusContactPoint={radiusContactPoint,radiusContactPoint})
         "move point detection"
           annotation (Placement(transformation(extent={{-60,12},{0,72}})));
-       IdealizedContact.ContactBlock.LinearContact.Components.ForceCylinderToRectangle
-                                           contact_force[2](
+        IdealizedContact.ContactBlock.LinearContact.Components.ForceCylinderToRectangle
+          contact_force[2](
           q={1,-1},
           c={springCoefficient,springCoefficient},
           d={dampingCoefficient,dampingCoefficient},
@@ -5796,8 +5711,7 @@ Integration of the two blocks is in progress.")}));
           exact={exact,exact},
           radiusContactPoint={radiusContactPoint,radiusContactPoint},
           Color_contact_point_cylinder={colorContactPoints1,colorContactPoints1},
-          Color_contact_point_rectangle={colorContactPoints2,
-              colorContactPoints2},
+          Color_contact_point_rectangle={colorContactPoints2,colorContactPoints2},
           mue_r={mue_r,mue_r},
           gamma1={gamma1,gamma1},
           gamma2={gamma2,gamma2},
@@ -5807,12 +5721,12 @@ Integration of the two blocks is in progress.")}));
           gamma6={gamma6,gamma6})
           annotation (Placement(transformation(extent={{2,-54},{54,0}})));
 
-       Modelica.Mechanics.MultiBody.Sensors.RelativePosition rP_cm_l2(
-           resolveInFrame=Modelica.Mechanics.MultiBody.Types.ResolveInFrameAB.frame_a) "test"
-         annotation (Placement(transformation(
-             extent={{-6,-6},{6,6}},
-             rotation=90,
-             origin={50,34})));
+        Modelica.Mechanics.MultiBody.Sensors.RelativePosition rP_cm_l2(resolveInFrame=
+             Modelica.Mechanics.MultiBody.Types.ResolveInFrameAB.frame_a) "test"
+          annotation (Placement(transformation(
+              extent={{-6,-6},{6,6}},
+              rotation=90,
+              origin={50,34})));
       equation
         connect(move_point[1].frame_b2, contact_force[1].frame_a1) annotation (Line(
             points={{0.6,60},{28,60},{28,0.54}},
@@ -5923,13 +5837,14 @@ Integration of the two blocks is in progress.")}));
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
-        connect(contact_force.pos_ctc_BCS1a, move_point.pos_ctc_BCS1a)
-          annotation (Line(
+        connect(contact_force.pos_ctc_BCS1a, move_point.pos_ctc_BCS1a) annotation (
+            Line(
             points={{0.44,-2.16},{-12.78,-2.16},{-12.78,9.6},{-13.8,9.6}},
             color={0,0,127},
             smooth=Smooth.None));
-        annotation (Diagram(graphics), Icon(graphics={Rectangle(extent={{-100,100},
-                    {100,-100}}, lineColor={255,128,0}), Text(
+        annotation (
+          Diagram(graphics),
+          Icon(graphics={Text(
                 extent={{-82,8},{82,-12}},
                 lineColor={0,0,255},
                 textString="Cylinder-Rectangle")}),
@@ -5939,41 +5854,21 @@ Integration of the two blocks is in progress.")}));
 
       model CylinderToCircle
         extends IdealizedContact.Components.PartialContactBlock;
-        import SI = Modelica.SIunits;
-        outer parameter SI.TranslationalSpringConstant springCoefficient=1000000;
-        outer parameter SI.TranslationalDampingConstant dampingCoefficient=1000000;
-        outer parameter Real n1 = 1.5;
-        outer parameter Real n2 = n1;
-        outer parameter SI.CoefficientOfFriction mue_r=0.0001;
-        outer parameter Real gamma1=1;
-        outer parameter Real gamma2=1;
-        outer parameter Real gamma3=1;
-        outer parameter Real gamma4=1;
-        outer parameter Real gamma5=1;
-        outer parameter Real gamma6=1;
-        outer parameter SI.Distance p_max=0.001;
-        outer parameter Boolean exact=false;
-        outer parameter SI.Frequency f=100000;
-        outer parameter Boolean animation=true;
-        outer parameter Modelica.SIunits.Radius radiusContactPoint=0.005;
-        outer parameter Modelica.Mechanics.MultiBody.Types.Color
-          colorContactPoints1 =                                                {0,180,0};
-        outer parameter Modelica.Mechanics.MultiBody.Types.Color
-          colorContactPoints2 =                                                {255,0,255};
 
     protected
-        parameter Real N1 = if n1==0 then Modelica.Constants.eps else n1;//to avoid mathematical error in case of 0^0
-        parameter Real N2 = if n2==0 then Modelica.Constants.eps else n2;
+        parameter Real N1=if n1 == 0 then Modelica.Constants.eps else n1;
+        //to avoid mathematical error in case of 0^0
+        parameter Real N2=if n2 == 0 then Modelica.Constants.eps else n2;
 
     public
         IdealizedContact.ContactBlock.LinearContact.Components.MovePointCylinderToCircle
-                                              move_point_cylinder_circle[2](
+          move_point_cylinder_circle[2](
           q={1,-1},
           f={f,f},
           exact={exact,exact}) "move point detection"
           annotation (Placement(transformation(extent={{-60,12},{0,72}})));
         IdealizedContact.ContactBlock.LinearContact.Components.ForceCylinderToCircle
-                                         force_cylinder_circle[2](
+          force_cylinder_circle[2](
           c={springCoefficient,springCoefficient},
           d={dampingCoefficient,dampingCoefficient},
           n1={N1,N1},
@@ -6088,54 +5983,29 @@ Integration of the two blocks is in progress.")}));
             points={{-1.8,-3.6},{-18,-3.6},{-18,9.6}},
             color={0,0,127},
             smooth=Smooth.None));
-        annotation (Icon(graphics={                   Rectangle(extent={{-100,100},{100,
-                    -100}},      lineColor={255,128,0}), Text(
+        annotation (Icon(graphics={Text(
                 extent={{-84,10},{80,-10}},
                 lineColor={0,0,255},
-                textString="Cylinder-Circle")}),
-                                         Diagram(graphics));
+                textString="Cylinder-Circle")}), Diagram(graphics));
       end CylinderToCircle;
 
       model CylinderToCylinderPoint
         extends IdealizedContact.Components.PartialContactBlock;
 
-        import SI = Modelica.SIunits;
-        outer parameter SI.TranslationalSpringConstant springCoefficient=1000000;
-        outer parameter SI.TranslationalDampingConstant dampingCoefficient=1000000;
-        outer parameter Real n1 = 1.5;
-        outer parameter Real n2 = n1;
-        outer parameter SI.CoefficientOfFriction mue_r=0.0001;
-        outer parameter Real gamma1=1;
-        outer parameter Real gamma2=1;
-        outer parameter Real gamma3=1;
-        outer parameter Real gamma4=1;
-        outer parameter Real gamma5=1;
-        outer parameter Real gamma6=1;
-        outer parameter SI.Distance p_max=0.001;
-        outer parameter Boolean exact=false;
-        outer parameter SI.Frequency f=100000;
-        outer parameter Boolean animation=true;
-        outer parameter Modelica.SIunits.Radius radiusContactPoint=0.005;
-        outer parameter Modelica.Mechanics.MultiBody.Types.Color
-          colorContactPoints1 =                                                {0,180,0};
-        outer parameter Modelica.Mechanics.MultiBody.Types.Color
-          colorContactPoints2 =                                                {255,0,255};
-
     protected
-        parameter Real N1 = if n1==0 then Modelica.Constants.eps else n1;//to avoid mathematical error in case of 0^0
-        parameter Real N2 = if n2==0 then Modelica.Constants.eps else n2;
+        parameter Real N1=if n1 == 0 then Modelica.Constants.eps else n1;
+        //to avoid mathematical error in case of 0^0
+        parameter Real N2=if n2 == 0 then Modelica.Constants.eps else n2;
 
     public
-        Components.MovePointCylinderToCylinderPoint
-                                                movePointCylinderToCylinderP(
+        Components.MovePointCylinderToCylinderPoint movePointCylinderToCylinderP(
           f=f,
           radiusContactPoint=radiusContactPoint,
           Color_contact_point_cylinder1=colorContactPoints1,
           Color_contact_point_cylinder2=colorContactPoints2,
           animation=animation)
           annotation (Placement(transformation(extent={{-60,28},{-20,68}})));
-        Components.ForceCylinderToCylinderPoint
-                                            forceCylnderToCylinderP(
+        Components.ForceCylinderToCylinderPoint forceCylnderToCylinderP(
           f=f,
           c=springCoefficient,
           d=dampingCoefficient,
@@ -6150,11 +6020,11 @@ Integration of the two blocks is in progress.")}));
           gamma6=gamma6,
           t_max=p_max)
           annotation (Placement(transformation(extent={{-28,-68},{12,-28}})));
-      //   Modelica.Blocks.Sources.BooleanConstant booleanConstant annotation (
-      //       Placement(transformation(
-      //         extent={{-10,-10},{10,10}},
-      //         rotation=90,
-      //         origin={-8,-86})));
+        //   Modelica.Blocks.Sources.BooleanConstant booleanConstant annotation (
+        //       Placement(transformation(
+        //         extent={{-10,-10},{10,10}},
+        //         rotation=90,
+        //         origin={-8,-86})));
       equation
         connect(movePointCylinderToCylinderP.frame_b2, forceCylnderToCylinderP.frame_a3)
           annotation (Line(
@@ -6207,54 +6077,30 @@ Integration of the two blocks is in progress.")}));
             points={{-29.6,-44},{-88,-44},{-88,10},{-108,10}},
             color={0,0,127},
             smooth=Smooth.None));
-      //   connect(booleanConstant.y, forceCylnderToCylinderP.enabled) annotation (
-      //      Line(
-      //       points={{-8,-75},{-8,-68},{-7.6,-68}},
-      //       color={255,0,255},
-      //       smooth=Smooth.None));
-      forceCylnderToCylinderP.enabled=true;
-      movePointCylinderToCylinderP.enabled=true;
-        annotation (Icon(graphics={                   Rectangle(extent={{-100,100},
-                    {100,-100}}, lineColor={255,128,0}), Text(
+        //   connect(booleanConstant.y, forceCylnderToCylinderP.enabled) annotation (
+        //      Line(
+        //       points={{-8,-75},{-8,-68},{-7.6,-68}},
+        //       color={255,0,255},
+        //       smooth=Smooth.None));
+        forceCylnderToCylinderP.enabled = true;
+        movePointCylinderToCylinderP.enabled = true;
+        annotation (Icon(graphics={Text(
                 extent={{-80,10},{84,-10}},
                 lineColor={0,0,255},
-                textString="Cylinder-Cylinder")}),         Diagram(
-              coordinateSystem(preserveAspectRatio=false, extent={{-100,-100},{
-                  100,100}}),                                      graphics));
+                textString="Cylinder-Cylinder")}), Diagram(coordinateSystem(
+                preserveAspectRatio=false, extent={{-100,-100},{100,100}}), graphics));
       end CylinderToCylinderPoint;
 
       model CylinderToCylinderLine
         extends IdealizedContact.Components.PartialContactBlock;
 
-        import SI = Modelica.SIunits;
-        outer parameter SI.TranslationalSpringConstant springCoefficient=1000000;
-        outer parameter SI.TranslationalDampingConstant dampingCoefficient=1000000;
-        outer parameter Real n1 = 1.5;
-        outer parameter Real n2 = n1;
-        outer parameter SI.CoefficientOfFriction mue_r=0.0001;
-        outer parameter Real gamma1=1;
-        outer parameter Real gamma2=1;
-        outer parameter Real gamma3=1;
-        outer parameter Real gamma4=1;
-        outer parameter Real gamma5=1;
-        outer parameter Real gamma6=1;
-        outer parameter SI.Distance p_max=0.001;
-        outer parameter Boolean exact=false;
-        outer parameter SI.Frequency f=100000;
-        outer parameter Boolean animation=true;
-        outer parameter Modelica.SIunits.Radius radiusContactPoint=0.005;
-        outer parameter Modelica.Mechanics.MultiBody.Types.Color
-          colorContactPoints1 =                                                {0,180,0};
-        outer parameter Modelica.Mechanics.MultiBody.Types.Color
-          colorContactPoints2 =                                                {255,0,255};
-
     protected
-        parameter Real N1 = if n1==0 then Modelica.Constants.eps else n1;//to avoid mathematical error in case of 0^0
-        parameter Real N2 = if n2==0 then Modelica.Constants.eps else n2;
+        parameter Real N1=if n1 == 0 then Modelica.Constants.eps else n1;
+        //to avoid mathematical error in case of 0^0
+        parameter Real N2=if n2 == 0 then Modelica.Constants.eps else n2;
 
     public
-        Components.MovePointCylinderToCylinderLine
-                                                move_point_cylinder_cylinder[2](
+        Components.MovePointCylinderToCylinderLine move_point_cylinder_cylinder[2](
           q={1,-1},
           f={f,f},
           animation={animation,animation},
@@ -6263,8 +6109,7 @@ Integration of the two blocks is in progress.")}));
           Color_contact_point_cylinder2={colorContactPoints2,colorContactPoints2})
         "move point detection"
           annotation (Placement(transformation(extent={{-40,-20},{0,20}})));
-        Components.ForceCylinderToCylinderLine
-                                           force_cylinder_cylinder[2](
+        Components.ForceCylinderToCylinderLine force_cylinder_cylinder[2](
           c={springCoefficient,springCoefficient},
           d={dampingCoefficient,dampingCoefficient},
           n1={N1,N1},
@@ -6279,11 +6124,11 @@ Integration of the two blocks is in progress.")}));
           gamma5={gamma5,gamma5},
           gamma6={gamma6,gamma6})
           annotation (Placement(transformation(extent={{0,-68},{40,-28}})));
-      //   Modelica.Blocks.Sources.BooleanConstant booleanConstant annotation (
-      //       Placement(transformation(
-      //         extent={{-10,-10},{10,10}},
-      //         rotation=90,
-      //         origin={14,-90})));
+        //   Modelica.Blocks.Sources.BooleanConstant booleanConstant annotation (
+        //       Placement(transformation(
+        //         extent={{-10,-10},{10,10}},
+        //         rotation=90,
+        //         origin={14,-90})));
       equation
         connect(move_point_cylinder_cylinder[1].frame_a1, frame_a) annotation (Line(
             points={{-40.4,7.69231},{-80,7.69231},{-80,60},{-102,60}},
@@ -6347,23 +6192,23 @@ Integration of the two blocks is in progress.")}));
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
-        connect(force_cylinder_cylinder[1].vector_cylinder2, vector_2)
-          annotation (Line(
+        connect(force_cylinder_cylinder[1].vector_cylinder2, vector_2) annotation (
+            Line(
             points={{-1.6,-52},{-84,-52},{-84,-30},{-108,-30}},
             color={0,0,127},
             smooth=Smooth.None));
-        connect(force_cylinder_cylinder[2].vector_cylinder2, vector_2)
-          annotation (Line(
+        connect(force_cylinder_cylinder[2].vector_cylinder2, vector_2) annotation (
+            Line(
             points={{-1.6,-52},{-84,-52},{-84,-30},{-108,-30}},
             color={0,0,127},
             smooth=Smooth.None));
-        connect(force_cylinder_cylinder[1].vector_cylinder1, vector_1)
-          annotation (Line(
+        connect(force_cylinder_cylinder[1].vector_cylinder1, vector_1) annotation (
+            Line(
             points={{-1.6,-44},{-92,-44},{-92,10},{-108,10}},
             color={0,0,127},
             smooth=Smooth.None));
-        connect(force_cylinder_cylinder[2].vector_cylinder1, vector_1)
-          annotation (Line(
+        connect(force_cylinder_cylinder[2].vector_cylinder1, vector_1) annotation (
+            Line(
             points={{-1.6,-44},{-92,-44},{-92,10},{-108,10}},
             color={0,0,127},
             smooth=Smooth.None));
@@ -6377,72 +6222,47 @@ Integration of the two blocks is in progress.")}));
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
-      //   connect(booleanConstant.y, force_cylinder_cylinder[1].enabled)
-      //     annotation (Line(
-      //       points={{14,-79},{13.6,-79},{13.6,-69.6}},
-      //       color={255,0,255},
-      //       smooth=Smooth.None));
-      //   connect(booleanConstant.y, force_cylinder_cylinder[2].enabled)
-      //     annotation (Line(
-      //       points={{14,-79},{13.6,-79},{13.6,-69.6}},
-      //       color={255,0,255},
-      //       smooth=Smooth.None));
-      force_cylinder_cylinder[1].enabled=true;
-      force_cylinder_cylinder[2].enabled=true;
-      move_point_cylinder_cylinder[1].enabled=true;
-      move_point_cylinder_cylinder[2].enabled=true;
-        annotation (Icon(graphics={                   Rectangle(extent={{-100,100},
-                    {100,-100}}, lineColor={255,128,0}), Text(
+        //   connect(booleanConstant.y, force_cylinder_cylinder[1].enabled)
+        //     annotation (Line(
+        //       points={{14,-79},{13.6,-79},{13.6,-69.6}},
+        //       color={255,0,255},
+        //       smooth=Smooth.None));
+        //   connect(booleanConstant.y, force_cylinder_cylinder[2].enabled)
+        //     annotation (Line(
+        //       points={{14,-79},{13.6,-79},{13.6,-69.6}},
+        //       color={255,0,255},
+        //       smooth=Smooth.None));
+        force_cylinder_cylinder[1].enabled = true;
+        force_cylinder_cylinder[2].enabled = true;
+        move_point_cylinder_cylinder[1].enabled = true;
+        move_point_cylinder_cylinder[2].enabled = true;
+        annotation (Icon(graphics={Text(
                 extent={{-80,10},{84,-10}},
                 lineColor={0,0,255},
-                textString="Cylinder-Cylinder")}),         Diagram(
-              coordinateSystem(preserveAspectRatio=false, extent={{-100,-100},{100,100}}),
-                                                                   graphics));
+                textString="Cylinder-Cylinder")}), Diagram(coordinateSystem(
+                preserveAspectRatio=false, extent={{-100,-100},{100,100}}), graphics));
       end CylinderToCylinderLine;
 
       model CylinderToCylinderCombined
         extends IdealizedContact.Components.PartialContactBlock;
+        Real Length_Direction1_wf[3];
+        Real Length_Direction2_wf[3];
 
-        import SI = Modelica.SIunits;
-        outer parameter SI.TranslationalSpringConstant springCoefficient=1000000;
-        outer parameter SI.TranslationalDampingConstant dampingCoefficient=1000000;
-        outer parameter Real n1 = 1.5;
-        outer parameter Real n2 = n1;
-        outer parameter SI.CoefficientOfFriction mue_r=0.0001;
-        outer parameter Real gamma1=1;
-        outer parameter Real gamma2=1;
-        outer parameter Real gamma3=1;
-        outer parameter Real gamma4=1;
-        outer parameter Real gamma5=1;
-        outer parameter Real gamma6=1;
-        outer parameter SI.Distance p_max=0.001;
-        outer parameter Boolean exact=false;
-        outer parameter SI.Frequency f=100000;
-        outer parameter Boolean animation=true;
-        outer parameter Modelica.SIunits.Radius radiusContactPoint=0.005;
-        outer parameter Modelica.Mechanics.MultiBody.Types.Color
-          colorContactPoints1 =                                                {0,180,0};
-        outer parameter Modelica.Mechanics.MultiBody.Types.Color
-          colorContactPoints2 =                                                {255,0,255};
-      Real Length_Direction1_wf[3];
-      Real Length_Direction2_wf[3];
-
-      Boolean enable2p;
+        Boolean enable2p;
     protected
-        parameter Real N1 = if n1==0 then Modelica.Constants.eps else n1;//to avoid mathematical error in case of 0^0
-        parameter Real N2 = if n2==0 then Modelica.Constants.eps else n2;
+        parameter Real N1=if n1 == 0 then Modelica.Constants.eps else n1;
+        //to avoid mathematical error in case of 0^0
+        parameter Real N2=if n2 == 0 then Modelica.Constants.eps else n2;
 
     public
-        Components.MovePointCylinderToCylinderPoint
-                                                movePointCylinderToCylinderP(
+        Components.MovePointCylinderToCylinderPoint movePointCylinderToCylinderP(
           f=f,
           radiusContactPoint=radiusContactPoint,
           Color_contact_point_cylinder1=colorContactPoints1,
           Color_contact_point_cylinder2=colorContactPoints2,
           animation=animation)
           annotation (Placement(transformation(extent={{-60,28},{-20,68}})));
-        Components.ForceCylinderToCylinderPoint
-                                            forceCylnderToCylinderP(
+        Components.ForceCylinderToCylinderPoint forceCylnderToCylinderP(
           f=f,
           c=springCoefficient,
           d=dampingCoefficient,
@@ -6458,8 +6278,7 @@ Integration of the two blocks is in progress.")}));
           t_max=p_max)
           annotation (Placement(transformation(extent={{-28,-68},{12,-28}})));
     public
-        Components.MovePointCylinderToCylinderLine
-                                                move_point_cylinder_cylinder[2](
+        Components.MovePointCylinderToCylinderLine move_point_cylinder_cylinder[2](
           q={1,-1},
           f={f,f},
           animation={animation,animation},
@@ -6468,8 +6287,7 @@ Integration of the two blocks is in progress.")}));
           Color_contact_point_cylinder2={colorContactPoints2,colorContactPoints2})
         "move point detection"
           annotation (Placement(transformation(extent={{40,32},{80,72}})));
-        Components.ForceCylinderToCylinderLine
-                                           force_cylinder_cylinder[2](
+        Components.ForceCylinderToCylinderLine force_cylinder_cylinder[2](
           c={springCoefficient,springCoefficient},
           d={dampingCoefficient,dampingCoefficient},
           n1={N1,N1},
@@ -6495,16 +6313,20 @@ Integration of the two blocks is in progress.")}));
           n3=3,
           n4=3) annotation (Placement(transformation(extent={{-20,-100},{-8,-88}})));
       equation
-      Length_Direction1_wf = Modelica.Mechanics.MultiBody.Frames.resolve1(frame_a.R,deMultiplex1.y1);
-      Length_Direction2_wf = Modelica.Mechanics.MultiBody.Frames.resolve1(frame_b.R,deMultiplex2.y1);
+        Length_Direction1_wf = Modelica.Mechanics.MultiBody.Frames.resolve1(frame_a.R,
+          deMultiplex1.y1);
+        Length_Direction2_wf = Modelica.Mechanics.MultiBody.Frames.resolve1(frame_b.R,
+          deMultiplex2.y1);
 
-      enable2p=abs(IdealizedContact.Components.VectorCalculations.angleBetweenTwoVectors(Length_Direction1_wf,Length_Direction2_wf))<0.01;
-      force_cylinder_cylinder[1].enabled=enable2p;
-      force_cylinder_cylinder[2].enabled=enable2p;
-      move_point_cylinder_cylinder[1].enabled=enable2p;
-      move_point_cylinder_cylinder[2].enabled=enable2p;
-      forceCylnderToCylinderP.enabled=not enable2p;
-      movePointCylinderToCylinderP.enabled=not enable2p;
+        enable2p = abs(
+          IdealizedContact.Components.VectorCalculations.angleBetweenTwoVectors(
+          Length_Direction1_wf, Length_Direction2_wf)) < 0.01;
+        force_cylinder_cylinder[1].enabled = enable2p;
+        force_cylinder_cylinder[2].enabled = enable2p;
+        move_point_cylinder_cylinder[1].enabled = enable2p;
+        move_point_cylinder_cylinder[2].enabled = enable2p;
+        forceCylnderToCylinderP.enabled = not enable2p;
+        movePointCylinderToCylinderP.enabled = not enable2p;
         connect(movePointCylinderToCylinderP.frame_b2, forceCylnderToCylinderP.frame_a3)
           annotation (Line(
             points={{-20.1429,32.4444},{-12,32.4444},{-12,-27.6}},
@@ -6562,24 +6384,28 @@ Integration of the two blocks is in progress.")}));
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
+
         connect(move_point_cylinder_cylinder[2].frame_a1, frame_a) annotation (Line(
             points={{39.6,59.6923},{16,59.6923},{16,76},{-72,76},{-72,60},{-102,
               60}},
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
+
         connect(move_point_cylinder_cylinder[1].frame_a2, frame_b) annotation (Line(
             points={{39.6,41.2308},{20,41.2308},{20,-74},{-76,-74},{-76,-60},{
               -102,-60}},
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
+
         connect(move_point_cylinder_cylinder[2].frame_a2, frame_b) annotation (Line(
             points={{39.6,41.2308},{20,41.2308},{20,-6},{-76,-6},{-76,-60},{
               -102,-60}},
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
+
         connect(move_point_cylinder_cylinder[1].vector_cylinder1, vector_1)
           annotation (Line(
             points={{38.4,53.5385},{4,53.5385},{4,10},{-108,10}},
@@ -6596,19 +6422,21 @@ Integration of the two blocks is in progress.")}));
               -30}},
             color={0,0,127},
             smooth=Smooth.None));
+
         connect(move_point_cylinder_cylinder[2].vector_cylinder2, vector_2)
           annotation (Line(
             points={{38.4,47.3846},{12,47.3846},{12,2},{-64,2},{-64,-30},{-108,
               -30}},
             color={0,0,127},
             smooth=Smooth.None));
-        connect(move_point_cylinder_cylinder.frame_b2,force_cylinder_cylinder. frame_a3)
+
+        connect(move_point_cylinder_cylinder.frame_b2, force_cylinder_cylinder.frame_a3)
           annotation (Line(
             points={{80.4,41.2308},{92,41.2308},{92,26.4}},
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
-        connect(move_point_cylinder_cylinder.frame_b1,force_cylinder_cylinder. frame_a4)
+        connect(move_point_cylinder_cylinder.frame_b1, force_cylinder_cylinder.frame_a4)
           annotation (Line(
             points={{80.4,59.6923},{104,59.6923},{104,26.4}},
             color={95,95,95},
@@ -6624,23 +6452,23 @@ Integration of the two blocks is in progress.")}));
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
-        connect(force_cylinder_cylinder[1].vector_cylinder2, vector_2)
-          annotation (Line(
+        connect(force_cylinder_cylinder[1].vector_cylinder2, vector_2) annotation (
+            Line(
             points={{74.4,2},{-64,2},{-64,-30},{-108,-30}},
             color={0,0,127},
             smooth=Smooth.None));
-        connect(force_cylinder_cylinder[2].vector_cylinder2, vector_2)
-          annotation (Line(
+        connect(force_cylinder_cylinder[2].vector_cylinder2, vector_2) annotation (
+            Line(
             points={{74.4,2},{-64,2},{-64,-30},{-108,-30}},
             color={0,0,127},
             smooth=Smooth.None));
-        connect(force_cylinder_cylinder[1].vector_cylinder1, vector_1)
-          annotation (Line(
+        connect(force_cylinder_cylinder[1].vector_cylinder1, vector_1) annotation (
+            Line(
             points={{74.4,10},{-108,10}},
             color={0,0,127},
             smooth=Smooth.None));
-        connect(force_cylinder_cylinder[2].vector_cylinder1, vector_1)
-          annotation (Line(
+        connect(force_cylinder_cylinder[2].vector_cylinder1, vector_1) annotation (
+            Line(
             points={{74.4,10},{-108,10}},
             color={0,0,127},
             smooth=Smooth.None));
@@ -6662,14 +6490,12 @@ Integration of the two blocks is in progress.")}));
             points={{-108,-30},{-82,-30},{-82,-94},{-21.2,-94}},
             color={0,0,127},
             smooth=Smooth.None));
-        annotation (Icon(graphics={                   Rectangle(extent={{-100,100},
-                    {100,-100}}, lineColor={255,128,0}), Text(
+        annotation (Icon(graphics={Text(
                 extent={{-80,10},{84,-10}},
                 lineColor={0,0,255},
-                textString="Cylinder-Cylinder")}),         Diagram(coordinateSystem(
-                preserveAspectRatio=false, extent={{-100,-100},{100,100}}),
-                                                                   graphics={
-                                      Text(
+                textString="Cylinder-Cylinder")}), Diagram(coordinateSystem(
+                preserveAspectRatio=false, extent={{-100,-100},{100,100}}), graphics={
+                Text(
                 extent={{-30,106},{46,64}},
                 lineColor={255,0,0},
                 textStyle={TextStyle.Bold},
@@ -9807,63 +9633,38 @@ Integration of the two blocks is in progress.")}));
       extends Modelica.Icons.Package;
       model RectangleToRectangle
         extends IdealizedContact.Components.PartialContactBlock;
-        import SI = Modelica.SIunits;
-        outer parameter SI.TranslationalSpringConstant springCoefficient=10000;
-        outer parameter SI.TranslationalDampingConstant dampingCoefficient=10000;
-        outer parameter Real n1 = 1.5;
-        outer parameter Real n2 = n1;
-        outer parameter SI.CoefficientOfFriction mue_r=0.0001;
-        outer parameter Real gamma1=1;
-        outer parameter Real gamma2=1;
-        outer parameter Real gamma3=1;
-        outer parameter Real gamma4=1;
-        outer parameter Real gamma5=1;
-        outer parameter Real gamma6=1;
-        outer parameter SI.Distance p_max=0.001;
-        outer parameter Boolean exact=false;
-        outer parameter SI.Frequency f=100000;
-
-        outer parameter Boolean animation=true;
-        outer parameter Modelica.SIunits.Radius radiusContactPoint=0.005;
-        outer parameter Modelica.Mechanics.MultiBody.Types.Color
-          colorContactPoints1 =                                            {0,180,0};
-        outer parameter Modelica.Mechanics.MultiBody.Types.Color
-          colorContactPoints2 =                                            {255,0,255};
-
     protected
-        parameter Real N1 = if n1==0 then Modelica.Constants.eps else n1;//to avoid mathematical error in case of 0^0
-        parameter Real N2 = if n2==0 then Modelica.Constants.eps else n2;
+        parameter Real N1=if n1 == 0 then Modelica.Constants.eps else n1;
+        //to avoid mathematical error in case of 0^0
+        parameter Real N2=if n2 == 0 then Modelica.Constants.eps else n2;
 
     public
         IdealizedContact.ContactBlock.PlanarContact.Components.MovePointRectangleToRectangle
-                                                  move_point_rectangle_rectangle[4](
+          move_point_rectangle_rectangle[4](
           q_L={1,-1,-1,1},
           q_W={1,1,-1,-1},
           f={f,f,f,f},
           exact={exact,exact,exact,exact})
           annotation (Placement(transformation(extent={{-60,6},{0,66}})));
         IdealizedContact.ContactBlock.PlanarContact.Components.ForceRectangleToRectangle
-                                             force_rectangle_rectangle[4](
-          d={dampingCoefficient,dampingCoefficient,dampingCoefficient,dampingCoefficient},
+          force_rectangle_rectangle[4](
+          d={dampingCoefficient,dampingCoefficient,dampingCoefficient,
+              dampingCoefficient},
           n1={N1,N1,N1,N1},
           n2={N2,N2,N2,N2},
-          t_max={p_max,p_max,p_max,
-              p_max},
+          t_max={p_max,p_max,p_max,p_max},
           q_l={-1,1,1,-1},
           q_w={-1,-1,1,1},
-          c={springCoefficient,springCoefficient,springCoefficient,
-              springCoefficient},
+          c={springCoefficient,springCoefficient,springCoefficient,springCoefficient},
           f={f,f,f,f},
           Animation={animation,animation,animation,animation},
           exact={exact,exact,exact,exact},
           radiusContactPoint={radiusContactPoint,radiusContactPoint,
               radiusContactPoint,radiusContactPoint},
-          Color_contact_point_rectangle1={colorContactPoints1,
-              colorContactPoints1,colorContactPoints1,
-              colorContactPoints1},
-          Color_contact_point_rectangle2={colorContactPoints2,
-              colorContactPoints2,colorContactPoints2,
-              colorContactPoints2},
+          Color_contact_point_rectangle1={colorContactPoints1,colorContactPoints1,
+              colorContactPoints1,colorContactPoints1},
+          Color_contact_point_rectangle2={colorContactPoints2,colorContactPoints2,
+              colorContactPoints2,colorContactPoints2},
           gamma1={gamma1,gamma1,gamma1,gamma1},
           gamma2={gamma2,gamma2,gamma2,gamma2},
           gamma3={gamma3,gamma3,gamma3,gamma3},
@@ -9873,8 +9674,8 @@ Integration of the two blocks is in progress.")}));
           annotation (Placement(transformation(extent={{-60,-66},{0,-6}})));
 
       equation
-        connect(move_point_rectangle_rectangle.frame_b1,
-          force_rectangle_rectangle.frame_a2) annotation (Line(
+        connect(move_point_rectangle_rectangle.frame_b1, force_rectangle_rectangle.frame_a2)
+          annotation (Line(
             points={{-12,5.4},{-12,-5.4}},
             color={95,95,95},
             thickness=0.5,
@@ -9951,76 +9752,68 @@ Integration of the two blocks is in progress.")}));
             points={{-62.4,-48},{-84,-48},{-84,-30},{-108,-30}},
             color={0,0,127},
             smooth=Smooth.None));
-        connect(vector_2, move_point_rectangle_rectangle[1].vector_q)
-          annotation (Line(
+        connect(vector_2, move_point_rectangle_rectangle[1].vector_q) annotation (
+            Line(
             points={{-108,-30},{-84,-30},{-84,24},{-62.4,24}},
             color={0,0,127},
             smooth=Smooth.None));
-        connect(vector_2, move_point_rectangle_rectangle[2].vector_q)
-          annotation (Line(
+        connect(vector_2, move_point_rectangle_rectangle[2].vector_q) annotation (
+            Line(
             points={{-108,-30},{-84,-30},{-84,24},{-62.4,24}},
             color={0,0,127},
             smooth=Smooth.None));
-        connect(vector_2, move_point_rectangle_rectangle[3].vector_q)
-          annotation (Line(
+        connect(vector_2, move_point_rectangle_rectangle[3].vector_q) annotation (
+            Line(
             points={{-108,-30},{-84,-30},{-84,24},{-62.4,24}},
             color={0,0,127},
             smooth=Smooth.None));
-        connect(vector_2, move_point_rectangle_rectangle[4].vector_q)
-          annotation (Line(
+        connect(vector_2, move_point_rectangle_rectangle[4].vector_q) annotation (
+            Line(
             points={{-108,-30},{-84,-30},{-84,24},{-62.4,24}},
             color={0,0,127},
             smooth=Smooth.None));
-        connect(frame_b, move_point_rectangle_rectangle[1].frame_a2)
-          annotation (Line(
+        connect(frame_b, move_point_rectangle_rectangle[1].frame_a2) annotation (Line(
             points={{-102,-60},{-74,-60},{-74,12},{-60.6,12}},
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
-        connect(frame_b, move_point_rectangle_rectangle[2].frame_a2)
-          annotation (Line(
+        connect(frame_b, move_point_rectangle_rectangle[2].frame_a2) annotation (Line(
             points={{-102,-60},{-74,-60},{-74,12},{-60.6,12}},
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
-        connect(frame_b, move_point_rectangle_rectangle[3].frame_a2)
-          annotation (Line(
+        connect(frame_b, move_point_rectangle_rectangle[3].frame_a2) annotation (Line(
             points={{-102,-60},{-74,-60},{-74,12},{-60.6,12}},
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
-        connect(frame_b, move_point_rectangle_rectangle[4].frame_a2)
-          annotation (Line(
+        connect(frame_b, move_point_rectangle_rectangle[4].frame_a2) annotation (Line(
             points={{-102,-60},{-74,-60},{-74,12},{-60.6,12}},
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
-        connect(move_point_rectangle_rectangle.frame_b2,
-          force_rectangle_rectangle.frame_a1) annotation (Line(
+        connect(move_point_rectangle_rectangle.frame_b2, force_rectangle_rectangle.frame_a1)
+          annotation (Line(
             points={{-36,5.4},{-36,-5.4}},
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
-        connect(force_rectangle_rectangle[1].frame_a3, frame_b) annotation (
-            Line(
+        connect(force_rectangle_rectangle[1].frame_a3, frame_b) annotation (Line(
             points={{-60.6,-60},{-102,-60}},
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
-        connect(force_rectangle_rectangle[2].frame_a3, frame_b) annotation (
-            Line(
+        connect(force_rectangle_rectangle[2].frame_a3, frame_b) annotation (Line(
             points={{-60.6,-60},{-102,-60}},
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
-        connect(force_rectangle_rectangle[3].frame_a3, frame_b) annotation (
-            Line(
+        connect(force_rectangle_rectangle[3].frame_a3, frame_b) annotation (Line(
             points={{-60.6,-60},{-102,-60}},
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
-        connect(force_rectangle_rectangle[4].frame_a3, frame_b) annotation (
-            Line(
+        connect(force_rectangle_rectangle[4].frame_a3, frame_b) annotation (Line(
             points={{-60.6,-60},{-102,-60}},
             color={95,95,95},
             thickness=0.5,
@@ -10030,8 +9823,9 @@ Integration of the two blocks is in progress.")}));
             points={{3,30},{14,30},{14,-29.7},{3.3,-29.7}},
             color={0,0,127},
             smooth=Smooth.None));
-        annotation (Diagram(graphics), Icon(graphics={Rectangle(extent={{-100,100},
-                    {100,-100}}, lineColor={255,128,0}), Text(
+        annotation (
+          Diagram(graphics),
+          Icon(graphics={Text(
                 extent={{-80,10},{84,-10}},
                 lineColor={0,0,255},
                 textString="Rectangle-Rectangle")}),
@@ -10041,49 +9835,26 @@ Integration of the two blocks is in progress.")}));
 
       model CircleToRectangle
         extends IdealizedContact.Components.PartialContactBlock;
-        import SI = Modelica.SIunits;
-        outer parameter SI.TranslationalSpringConstant springCoefficient=10000;
-        outer parameter SI.TranslationalDampingConstant dampingCoefficient=10000;
-        outer parameter Real n1 = 1.5;
-        outer parameter Real n2 = n1;
-        outer parameter SI.CoefficientOfFriction mue_r=0.0001;
-        outer parameter Real gamma1=1;
-        outer parameter Real gamma2=1;
-        outer parameter Real gamma3=1;
-        outer parameter Real gamma4=1;
-        outer parameter Real gamma5=1;
-        outer parameter Real gamma6=1;
-        outer parameter SI.Distance p_max=0.001;
-        outer parameter Boolean exact=false;
-        outer parameter SI.Frequency f=100000;
-
-        outer parameter Boolean animation=true;
-        outer parameter Modelica.SIunits.Radius radiusContactPoint=0.005;
-        outer parameter Modelica.Mechanics.MultiBody.Types.Color
-          colorContactPoints1 =                                            {0,180,0};
-        outer parameter Modelica.Mechanics.MultiBody.Types.Color
-          colorContactPoints2 =                                            {255,0,255};
 
     protected
-        parameter Real N1 = if n1==0 then Modelica.Constants.eps else n1;//to avoid mathematical error in case of 0^0
-        parameter Real N2 = if n2==0 then Modelica.Constants.eps else n2;
+        parameter Real N1=if n1 == 0 then Modelica.Constants.eps else n1;
+        //to avoid mathematical error in case of 0^0
+        parameter Real N2=if n2 == 0 then Modelica.Constants.eps else n2;
 
     public
         IdealizedContact.ContactBlock.PlanarContact.Components.MovePointCircleToRectangle
-                                               move_point_circle_rectangle(f=f,
-            exact=exact)
+          move_point_circle_rectangle(f=f, exact=exact)
           annotation (Placement(transformation(extent={{-40,12},{20,72}})));
         IdealizedContact.ContactBlock.PlanarContact.Components.ForceCircleToRectangle
-                                          force_circle_rectangle[4](
-          d={dampingCoefficient,dampingCoefficient,dampingCoefficient,dampingCoefficient},
+          force_circle_rectangle[4](
+          d={dampingCoefficient,dampingCoefficient,dampingCoefficient,
+              dampingCoefficient},
           n1={N1,N1,N1,N1},
           n2={N2,N2,N2,N2},
-          t_max={p_max,p_max,p_max,
-              p_max},
+          t_max={p_max,p_max,p_max,p_max},
           q_l={-1,1,1,-1},
           q_w={-1,-1,1,1},
-          c={springCoefficient,springCoefficient,springCoefficient,
-              springCoefficient},
+          c={springCoefficient,springCoefficient,springCoefficient,springCoefficient},
           f={f,f,f,f},
           exact={exact,exact,exact,exact},
           radiusContactPoint={radiusContactPoint,radiusContactPoint,
@@ -10100,6 +9871,7 @@ Integration of the two blocks is in progress.")}));
               colorContactPoints1,colorContactPoints1},
           Animation={animation,animation,animation,animation})
           annotation (Placement(transformation(extent={{-40,-72},{20,-12}})));
+
       equation
         connect(move_point_circle_rectangle.frame_b2, force_circle_rectangle.frame_a1)
           annotation (Line(
@@ -10208,12 +9980,10 @@ Integration of the two blocks is in progress.")}));
             color={95,95,95},
             thickness=0.5,
             smooth=Smooth.None));
-        annotation (Icon(graphics={                   Rectangle(extent={{-100,100},
-                    {100,-100}}, lineColor={255,128,0}), Text(
+        annotation (Icon(graphics={Text(
                 extent={{-80,10},{84,-10}},
                 lineColor={0,0,255},
-                textString="Circle-Rectangle")}),
-                                         Diagram(graphics));
+                textString="Circle-Rectangle")}), Diagram(graphics));
       end CircleToRectangle;
 
       package Components
@@ -12887,24 +12657,44 @@ the only case where this is done.
     end Utilities;
 
     partial model PartialContactBlock "base model for the contact blocks"
-
+    import SI =
+              Modelica.SIunits;
+      parameter SI.TranslationalSpringConstant springCoefficient=10000;
+      parameter SI.TranslationalDampingConstant dampingCoefficient=10000;
+      parameter Real n1=1.5;
+      parameter Real n2=n1;
+      parameter SI.CoefficientOfFriction mue_r=0.0001;
+      parameter Real gamma1=1;
+      parameter Real gamma2=1;
+      parameter Real gamma3=1;
+      parameter Real gamma4=1;
+      parameter Real gamma5=1;
+      parameter Real gamma6=1;
+      parameter SI.Distance p_max=0.001;
+      parameter Boolean exact=false;
+      parameter SI.Frequency f=100000;
+      parameter Boolean animation=true;
+      parameter Modelica.SIunits.Radius radiusContactPoint=0.005;
+      parameter Modelica.Mechanics.MultiBody.Types.Color colorContactPoints1={0,180,
+          0};
+      parameter Modelica.Mechanics.MultiBody.Types.Color colorContactPoints2={255,0,
+          255};
       Modelica.Mechanics.MultiBody.Interfaces.Frame_a frame_b "port2_frame"
         annotation (Placement(transformation(extent={{-118,-76},{-86,-44}})));
       Modelica.Mechanics.MultiBody.Interfaces.Frame_a frame_a "port1_frame"
         annotation (Placement(transformation(extent={{-118,44},{-86,76}})));
-      Modelica.Blocks.Interfaces.RealInput vector_1[12] "port1_vector"
-                                                           annotation (
+      Modelica.Blocks.Interfaces.RealInput vector_1[12] "port1_vector" annotation (
           Placement(transformation(
             extent={{-8,-8},{8,8}},
             rotation=0,
             origin={-108,10})));
-      Modelica.Blocks.Interfaces.RealInput vector_2[12] "port2_vector"
-                                                           annotation (
+      Modelica.Blocks.Interfaces.RealInput vector_2[12] "port2_vector" annotation (
           Placement(transformation(
             extent={{-8,-8},{8,8}},
             rotation=0,
             origin={-108,-30})));
-      annotation (Diagram(graphics));
+      annotation (Diagram(graphics), Icon(graphics={Rectangle(extent={{-100,100},{100,
+                  -100}}, lineColor={255,128,0})}));
     end PartialContactBlock;
    annotation(preferredView="info");
   end Components;
